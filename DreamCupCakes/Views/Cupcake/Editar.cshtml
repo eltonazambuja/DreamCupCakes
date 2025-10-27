@@ -1,0 +1,72 @@
+﻿@model DreamCupCakes.Models.ViewModels.CupcakeViewModel
+@{
+    ViewData["Title"] = "Editar Cupcake";
+}
+
+<h1 class="text-info mb-4">Editar Cupcake: @Model.Nome</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-8">
+        <form asp-action="Editar" enctype="multipart/form-data">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="FotoUrlExistente" />
+
+            <div class="row">
+                <div class="col-8">
+                    <div class="form-group mb-3">
+                        <label asp-for="Nome" class="control-label"></label>
+                        <input asp-for="Nome" class="form-control" />
+                        <span asp-validation-for="Nome" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Descricao" class="control-label"></label>
+                        <textarea asp-for="Descricao" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Descricao" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Valor" class="control-label"></label>
+                        <input asp-for="Valor" class="form-control" />
+                        <span asp-validation-for="Valor" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="col-4 text-center">
+                    <label class="control-label">Foto Atual</label>
+                    <div class="border p-2 rounded">
+                        @if (!string.IsNullOrEmpty(Model.FotoUrlExistente))
+                        {
+                            <img src="@Model.FotoUrlExistente" class="img-fluid" style="max-height: 150px; object-fit: cover;" alt="Foto Atual" />
+                        }
+                        else
+                        {
+                            <p class="text-muted">Sem foto</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="FotoArquivo" class="control-label">Trocar Foto (Selecione um novo arquivo)</label>
+                <input asp-for="FotoArquivo" type="file" class="form-control" />
+                <span asp-validation-for="FotoArquivo" class="text-danger"></span>
+            </div>
+
+            <div class="form-group form-check mb-4">
+                <input class="form-check-input" asp-for="Ativo" />
+                <label class="form-check-label" asp-for="Ativo"></label>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-info text-white">
+                    <i class="bi bi-save"></i> Salvar Alterações
+                </button>
+                <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>

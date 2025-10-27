@@ -1,0 +1,92 @@
+﻿@model DreamCupCakes.Models.ViewModels.PerfilViewModel
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Meu Perfil";
+
+    bool isEntregador = User.IsInRole("Entregador");
+
+    string controllerRetorno = isEntregador ? "Pedido" : "Home";
+    string actionRetorno = isEntregador ? "MeusPedidos" : "Vitrine";
+}
+
+<div class="container py-5">
+    <h1 class="text-primary mb-4"><i class="bi bi-person-circle"></i> Gerenciar Meu Perfil</h1>
+    <hr />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <div class="row">
+        <div class="col-md-7">
+            <form asp-action="Perfil" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="Id" />
+
+                <h4 class="mb-3">Informações Cadastrais</h4>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Nome" class="control-label"></label>
+                    <input asp-for="Nome" class="form-control" />
+                    <span asp-validation-for="Nome" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Email" class="control-label"></label>
+                    <input asp-for="Email" class="form-control" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="Telefone" class="control-label"></label>
+                    <input asp-for="Telefone" class="form-control" />
+                    <span asp-validation-for="Telefone" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="Endereco" class="control-label"></label>
+                    <input asp-for="Endereco" class="form-control" />
+                    <span asp-validation-for="Endereco" class="text-danger"></span>
+                </div>
+
+                <h4 class="mb-3 mt-5">Alteração de Senha (Opcional)</h4>
+                <p class="text-muted small">Preencha os campos abaixo apenas se desejar alterar sua senha.</p>
+
+                <div class="form-group mb-3">
+                    <label asp-for="NovaSenha" class="control-label"></label>
+                    <input asp-for="NovaSenha" class="form-control" />
+                    <span asp-validation-for="NovaSenha" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label asp-for="ConfirmaNovaSenha" class="control-label"></label>
+                    <input asp-for="ConfirmaNovaSenha" class="form-control" />
+                    <span asp-validation-for="ConfirmaNovaSenha" class="text-danger"></span>
+                </div>
+
+                <div class="form-group d-flex gap-3">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i> Salvar Alterações
+                    </button>
+                    <a asp-controller="@controllerRetorno" asp-action="@actionRetorno" class="btn btn-secondary btn-lg">
+                        Voltar à Dashboard
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-5">
+            <div class="alert alert-info mt-4">
+                @if (isEntregador)
+                {
+                    <p>Gerencie as entregas atribuídas a você na seção <a asp-controller="Pedido" asp-action="MeusPedidos">Minhas Entregas</a>.</p>
+                }
+                else
+                {
+                    <p>Seus pedidos podem ser acompanhados na seção <a asp-controller="Pedido" asp-action="MeusPedidosCliente">Meus Pedidos</a>.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,113 @@
+﻿@model List<DreamCupCakes.Models.Pedido>
+@{
+    ViewData["Title"] = "Acompanhamento de Pedidos";
+    var dataInicio = ViewData["DataInicio"] as string;
+    var dataFim = ViewData["DataFim"] as string;
+}
+
+<div class="container py-5">
+    <h1 class="text-primary mb-4"><i class="bi bi-clock-history"></i> Meus Pedidos</h1>
+    <p class="lead text-muted">Acompanhe o status e o histórico dos seus pedidos.</p>
+    <hr />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+
+    <div class="card shadow-sm p-3 mb-4 bg-light">
+        <h5 class="mb-3 text-primary"><i class="bi bi-calendar-check"></i> Filtrar por Período</h5>
+        <form asp-action="MeusPedidosCliente" method="get">
+            <div class="row g-3 align-items-end">
+
+                <div class="col-md-4">
+                    <label for="dataInicio" class="form-label small">Data Início</label>
+                    <input type="date" name="dataInicio" id="dataInicio" class="form-control" value="@dataInicio" />
+                </div>
+                <div class="col-md-4">
+                    <label for="dataFim" class="form-label small">Data Fim</label>
+                    <input type="date" name="dataFim" id="dataFim" class="form-control" value="@dataFim" />
+                </div>
+
+                <div class="col-md-4 d-flex">
+                    <button type="submit" class="btn btn-primary w-50 me-2">Filtrar</button>
+                    <a asp-action="MeusPedidosCliente" class="btn btn-outline-secondary w-50">Limpar Filtro</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info text-center mt-4">
+            Você ainda não possui pedidos registrados no período selecionado.
+            <br />
+            <a asp-controller="Home" asp-action="Vitrine" class="btn btn-sm btn-outline-primary mt-2">Começar a Comprar!</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive mt-4">
+            <table class="table table-hover table-striped shadow-sm">
+                <thead class="table-primary">
+                    <tr>
+                        <th># Pedido</th>
+                        <th>Data</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
+                        <th>Entregador</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="fw-bold">@item.Id</td>
+                            <td>@item.DataPedido.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td>R$ @item.ValorTotal.ToString("N2")</td>
+                            <td>
+                                @switch (item.Status)
+                                {
+                                    case "Entregue":
+                                        <span class="badge bg-success p-2">@item.Status</span>
+                                        ; break;
+                                    case "A caminho":
+
+                                        <span class="badge bg-warning text-dark p-2">@item.Status</span>
+                                        ; break;
+                                    case "Pago":
+
+                                        <span class="badge bg-primary p-2">@item.Status</span>
+                                        ; break;
+                                    case "Em Preparação":
+
+                                        <span class="badge bg-info text-dark p-2">@item.Status</span>
+                                        ; break;
+                                    case "Aguardando Pagamento":
+
+                                        <span class="badge bg-secondary p-2">@item.Status</span>
+                                        ; break;
+                                    default:
+
+                                        <span class="badge bg-secondary p-2">@item.Status</span>
+                                        ; break;
+                                }
+                            </td>
+                            <td>@(item.Entregador?.Nome ?? "Aguardando Atribuição")</td>
+                            <td>
+                                <a asp-action="Detalhes" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">
+                                    Ver Detalhes
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

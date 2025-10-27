@@ -1,0 +1,124 @@
+﻿@model DreamCupCakes.Models.Pedido
+@{
+    ViewData["Title"] = $"Pedido #{Model.Id} - Detalhes";
+    bool isAdmin = User.IsInRole("Administrador");
+    bool isEntregador = User.IsInRole("Entregador");
+
+    var entregadores = isAdmin ? ViewBag.EntregadoresDisponiveis as List<DreamCupCakes.Models.Usuario> : null;
+
+    var statusEntregador = new[] { "A caminho", "Entregue" };
+}
+
+<div class="container py-5">
+    <h1 class="text-info mb-4">
+        <i class="bi bi-file-earmark-text"></i> Detalhes do Pedido #@Model.Id
+    </h1>
+    <hr />
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+    }
+    <div class="mb-4 d-flex justify-content-between">
+        @if (isAdmin)
+        {
+            <a asp-action="Index" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar à Lista Geral
+            </a>
+        }
+        else if (isEntregador)
+        {
+            <a asp-action="MeusPedidos" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar aos Meus Pedidos
+            </a>
+        }
+    </div>
+
+    <div class="row">
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm p-4 h-100">
+                <h4 class="text-primary border-bottom pb-2 mb-3">Informações Principais</h4>
+
+                <p>
+                    <strong>Status Atual:</strong>
+                    <span class="badge bg-primary fs-6">@Model.Status</span>
+                </p>
+                <p><strong>Data/Hora do Pedido:</strong> @Model.DataPedido.ToString("dd/MM/yyyy HH:mm")</p>
+                <p><strong>Forma de Pagamento:</strong> @Model.FormaPagamento</p>
+                <p><strong>Valor Total:</strong> <span class="fw-bold text-success fs-5">R$ @Model.ValorTotal.ToString("N2")</span></p>
+
+                @if (isAdmin || isEntregador)
+                {
+                    <h5 class="mt-4 border-top pt-3">Atualizar Status</h5>
+                    <form asp-action="AtualizarStatus" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="input-group">
+                            <select name="novoStatus" class="form-select">
+                                @if (isAdmin)
+                                {
+                                    <option value="Aguardando Pagamento" selected="@(Model.Status == "Aguardando Pagamento")">Aguardando Pagamento</option>
+                                    <option value="Em Preparação" selected="@(Model.Status == "Em Preparação")">Em Preparação</option>
+                                }
+                                <option value="A caminho" selected="@(Model.Status == "A caminho")">A caminho</option>
+                                <option value="Entregue" selected="@(Model.Status == "Entregue")">Entregue</option>
+                            </select>
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                        </div>
+                    </form>
+                }
+
+                @if (isAdmin)
+                {
+                    <h5 class="mt-4 border-top pt-3">Atribuição</h5>
+                    <form asp-action="AtribuirEntregador" method="post">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        <div class="input-group">
+                            <select name="entregadorId" class="form-select">
+                                <option value="0">-- Remover/Nenhum --</option>
+                                @foreach (var entregador in entregadores!)
+                                {
+                                    <option value="@entregador.Id" selected="@(Model.EntregadorId == entregador.Id)">
+                                        @entregador.Nome
+                                    </option>
+                                }
+                            </select>
+                            <button type="submit" class="btn btn-warning text-dark">Atribuir</button>
+                        </div>
+                        <small class="text-muted">Entregador Atual: @(Model.Entregador?.Nome ?? "Nenhum")</small>
+                    </form>
+                }
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow-sm p-4">
+                <h4 class="text-success border-bottom pb-2 mb-3">Dados do Cliente e Entrega</h4>
+                <p><strong>Cliente:</strong> @Model.Cliente.Nome</p>
+                <p><strong>Email:</strong> @Model.Cliente.Email</p>
+                <p><strong>Telefone:</strong> @Model.Cliente.Telefone</p>
+                <p><strong>Endereço:</strong> @Model.Cliente.Endereco</p>
+            </div>
+
+            <div class="card shadow-sm p-4 mt-4">
+                <h4 class="text-danger border-bottom pb-2 mb-3">Itens do Pedido (@Model.Itens.Count)</h4>
+
+                <ul class="list-group">
+                    @foreach (var item in Model.Itens)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                @item.Quantidade x @item.Cupcake?.Nome
+                            </div>
+                            <span class="fw-bold">R$ @((item.Quantidade * item.PrecoUnitario).ToString("N2"))</span>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

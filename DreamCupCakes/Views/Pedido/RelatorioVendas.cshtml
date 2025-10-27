@@ -1,0 +1,121 @@
+﻿@model List<DreamCupCakes.Models.Pedido>
+@{
+    ViewData["Title"] = "Relatório de Vendas por Período";
+    DateTime dataInicio = DateTime.Parse(ViewData["DataInicio"]!.ToString()!);
+    DateTime dataFim = DateTime.Parse(ViewData["DataFim"]!.ToString()!);
+    decimal totalVendas = Model.Sum(p => p.ValorTotal);
+}
+
+<h1 class="text-info mb-4">
+    <i class="bi bi-bar-chart"></i> Relatório de Vendas
+</h1>
+<hr />
+
+<div class="card shadow-sm p-3 mb-4">
+    <h5 class="mb-3">Filtrar por Período</h5>
+
+    <form asp-action="RelatorioVendas" method="get" id="filterForm">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-4">
+                <label for="dataInicio" class="form-label">Data Início</label>
+                <input type="date" name="dataInicio" id="dataInicio" class="form-control" value="@dataInicio" required />
+            </div>
+            <div class="col-md-4">
+                <label for="dataFim" class="form-label">Data Fim</label>
+                <input type="date" name="dataFim" id="dataFim" class="form-control" value="@dataFim" required />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search"></i> Gerar Relatório
+                </button>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" form="exportForm" class="btn btn-success w-100">
+                    <i class="bi bi-file-earmark-excel"></i> Exportar (.csv)
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<form asp-action="ExportarRelatorio" method="post" id="exportForm">
+    <input type="hidden" name="dataInicio" value="@dataInicio" />
+    <input type="hidden" name="dataFim" value="@dataFim" />
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="text-muted">
+        Período: @dataInicio.ToString("dd/MM/yyyy") a @dataFim.ToString("dd/MM/yyyy")
+    </h4>
+    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-secondary">
+        <i class="bi bi-house-door"></i> Voltar ao Dashboard
+    </a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card text-white bg-primary mb-3 shadow">
+            <div class="card-body">
+                <h5 class="card-title">Total de Pedidos</h5>
+                <p class="card-text display-4">@Model.Count</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card text-white bg-success mb-3 shadow">
+            <div class="card-body">
+                <h5 class="card-title">Valor Total de Vendas</h5>
+                <p class="card-text display-4">R$ @totalVendas.ToString("N2")</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">Nenhum pedido encontrado no período selecionado.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover table-striped shadow-sm">
+            <thead class="table-info">
+                <tr>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Status</th>
+                    <th>Valor</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.DataPedido.ToString("dd/MM HH:mm")</td>
+                        <td>@item.Cliente?.Nome</td>
+                        <td>
+                            @switch (item.Status)
+                            {
+                                case "Entregue":
+                                    <span class="badge bg-success">@item.Status</span>
+                                    ; break;
+                                case "A caminho":
+
+                                    <span class="badge bg-warning text-dark">@item.Status</span>
+                                    ; break;
+                                default:
+
+                                    <span class="badge bg-secondary">@item.Status</span>
+                                    ; break;
+                            }
+                        </td>
+                        <td>R$ @item.ValorTotal.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

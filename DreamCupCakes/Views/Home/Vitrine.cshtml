@@ -1,0 +1,136 @@
+﻿@model IEnumerable<DreamCupCakes.Models.Cupcake>
+@using System.Security.Claims
+@{
+    ViewData["Title"] = "Vitrine de Cupcakes";
+}
+<body class="client-background">
+<div class="container py-5">
+
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-pink-theme">
+            <i class="bi bi-cupcake"></i> DreamCupCakes
+        </h1>
+        <p class="lead text-muted">Escolha o seu sabor, peça e receba onde estiver!</p>
+        <hr class="w-50 mx-auto" />
+
+        <div class="d-flex justify-content-center gap-3 mt-3">
+            @if (User.Identity.IsAuthenticated)
+            {
+                <a asp-controller="Carrinho" asp-action="Index" class="btn btn-outline-primary btn-lg">
+                    <i class="bi bi-cart-fill"></i> Meu Carrinho
+                </a>
+                @if (User.IsInRole("Administrador"))
+                {
+                    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-outline-info btn-lg">
+                        Painel Admin
+                    </a>
+                }
+                else if (User.IsInRole("Entregador"))
+                {
+                    <a asp-controller="Pedido" asp-action="MeusPedidos" class="btn btn-outline-warning btn-lg">
+                        Minhas Entregas
+                    </a>
+                }
+                else if (User.IsInRole("Cliente")) 
+                {
+                    <a asp-controller="Pedido" asp-action="MeusPedidosCliente" class="btn btn-outline-success btn-lg">
+                        <i class="bi bi-box-seam"></i> Meus Pedidos
+                    </a>
+                }
+                {
+                    <a asp-controller="Cliente" asp-action="Perfil" class="btn btn-outline-info btn-lg">
+                        <i class="bi bi-person-gear"></i> Meu Perfil
+                    </a>
+                }
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-outline-danger btn-lg">
+                        <i class="bi bi-box-arrow-right"></i> Sair
+                    </button>
+                </form>
+
+            }
+            else
+            {
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">
+                    Fazer Login
+                </a>
+                <a asp-controller="Account" asp-action="Cadastro" class="btn btn-outline-secondary btn-lg">
+                    Criar Conta
+                </a>
+            }
+        </div>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success text-center">@TempData["SuccessMessage"]</div>
+    }
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger text-center">@TempData["ErrorMessage"]</div>
+    }
+
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            Nenhum cupcake ativo no momento.
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+            @foreach (var cupcake in Model)
+            {
+                <div class="col">
+                    <div class="card h-100 shadow border-0 product-card">
+
+                        @if (!string.IsNullOrEmpty(cupcake.FotoUrl))
+                        {
+                            <img src="@cupcake.FotoUrl" class="card-img-top product-img" alt="@cupcake.Nome" style="height: 200px; object-fit: cover;">
+                        }
+                        else
+                        {
+                            <div class="bg-light text-muted text-center py-5" style="height: 200px;">Sem Imagem</div>
+                        }
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title text-center text-primary">@cupcake.Nome</h5>
+                            <p class="card-text text-muted small flex-grow-1">@cupcake.Descricao</p>
+                        </div>
+
+                        <div class="card-footer text-center bg-light">
+                            <span class="fs-4 fw-bold text-success">R$ @cupcake.Valor.ToString("N2")</span>
+
+                            <form asp-controller="Carrinho" asp-action="Adicionar" method="post" class="mt-2">
+                                <input type="hidden" name="cupcakeId" value="@cupcake.Id" />
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-cart-plus"></i> Adicionar ao Carrinho
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+<style>
+    .text-pink-theme {
+        color: #e66465;
+        font-family: 'Georgia', serif;
+        font-weight: bold;
+    }
+
+    .product-card {
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+        .product-card:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.25) !important;
+        }
+</style>
+</body>

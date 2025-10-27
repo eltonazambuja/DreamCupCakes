@@ -1,0 +1,153 @@
+﻿@model List<DreamCupCakes.Models.Pedido>
+@{
+    ViewData["Title"] = "Pedidos | Visão Geral";
+
+    var clientes = ViewBag.Clientes as List<DreamCupCakes.Models.Usuario> ?? new List<DreamCupCakes.Models.Usuario>();
+    var entregadores = ViewBag.Entregadores as List<DreamCupCakes.Models.Usuario> ?? new List<DreamCupCakes.Models.Usuario>();
+    var dataInicio = ViewData["DataInicio"] as string;
+    var dataFim = ViewData["DataFim"] as string;
+    var statusFiltro = ViewData["StatusFiltro"] as string;
+    var clienteIdFiltro = ViewData["ClienteIdFiltro"] as int?;
+    var entregadorIdFiltro = ViewData["EntregadorIdFiltro"] as int?;
+}
+
+<h1 class="text-primary mb-4">Visão Geral de Pedidos</h1>
+<hr />
+
+<div class="mb-4 d-flex justify-content-between">
+    <h4 class="text-muted">Total de Pedidos Encontrados: @Model.Count</h4>
+    <a asp-controller="Admin" asp-action="Dashboard" class="btn btn-secondary">
+        <i class="bi bi-house-door"></i> Voltar ao Dashboard
+    </a>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<div class="card shadow-sm p-3 mb-4 bg-light">
+    <h5 class="mb-3 text-primary"><i class="bi bi-funnel"></i> Aplicar Filtros</h5>
+    <form asp-action="Index" method="get">
+        <div class="row g-3">
+
+            <div class="col-md-3">
+                <label for="dataInicio" class="form-label small">Data Início</label>
+                <input type="date" name="dataInicio" id="dataInicio" class="form-control" value="@dataInicio" />
+            </div>
+            <div class="col-md-3">
+                <label for="dataFim" class="form-label small">Data Fim</label>
+                <input type="date" name="dataFim" id="dataFim" class="form-control" value="@dataFim" />
+            </div>
+
+            <div class="col-md-3">
+                <label for="statusFiltro" class="form-label small">Status</label>
+                <select name="statusFiltro" id="statusFiltro" class="form-select">
+                    <option value="Todos" selected="@(statusFiltro == "Todos" || statusFiltro == null)">Todos</option>
+                    <option value="Pago" selected="@(statusFiltro == "Pago")">Pago</option>
+                    <option value="Em Preparação" selected="@(statusFiltro == "Em Preparação")">Em Preparação</option>
+                    <option value="A caminho" selected="@(statusFiltro == "A caminho")">A caminho</option>
+                    <option value="Entregue" selected="@(statusFiltro == "Entregue")">Entregue</option>
+                    <option value="Aguardando Pagamento" selected="@(statusFiltro == "Aguardando Pagamento")">Aguardando Pagamento</option>
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="clienteIdFiltro" class="form-label small">Cliente</label>
+                <select name="clienteIdFiltro" id="clienteIdFiltro" class="form-select">
+                    <option value="0">Todos os Clientes</option>
+                    @foreach (var cliente in clientes)
+                    {
+                        <option value="@cliente.Id" selected="@(cliente.Id == clienteIdFiltro)">@cliente.Nome</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label for="entregadorIdFiltro" class="form-label small">Entregador</label>
+                <select name="entregadorIdFiltro" id="entregadorIdFiltro" class="form-select">
+                    <option value="0">Todos</option>
+                    <option value="-1" selected="@(entregadorIdFiltro == -1)">Aguardando Atribuição</option>
+                    @foreach (var entregador in entregadores)
+                    {
+                        <option value="@entregador.Id" selected="@(entregador.Id == entregadorIdFiltro)">@entregador.Nome</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-50 me-2">Filtrar</button>
+                <a asp-action="Index" class="btn btn-outline-secondary w-50">Limpar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info text-center">Nenhum pedido encontrado.</div>
+}
+else
+{
+    <div class="table-responsive">
+        <table class="table table-hover table-striped shadow-sm">
+            <thead class="table-primary">
+                <tr>
+                    <th>ID</th>
+                    <th>Data</th>
+                    <th>Cliente</th>
+                    <th>Valor Total</th>
+                    <th>Status</th>
+                    <th>Entregador</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.Id</td>
+                        <td>@item.DataPedido.ToString("dd/MM HH:mm")</td>
+                        <td>@item.Cliente?.Nome</td>
+                        <td>R$ @item.ValorTotal.ToString("N2")</td>
+                        <td>
+                            @switch (item.Status)
+                            {
+                                case "Entregue":
+                                    <span class="badge bg-success">@item.Status</span>
+                                    ; break;
+                                case "A caminho":
+
+                                    <span class="badge bg-warning text-dark">@item.Status</span>
+                                    ; break;
+                                case "Pago":
+
+                                    <span class="badge bg-primary">@item.Status</span>
+                                    ; break;
+                                case "Aguardando Pagamento":
+
+                                    <span class="badge bg-secondary">@item.Status</span>
+                                    ; break;
+                                default:
+
+                                    <span class="badge bg-primary">@item.Status</span>
+                                    ; break;
+                            }
+                        </td>
+                        <td>@(item.Entregador?.Nome ?? "Aguardando Atribuição")</td>
+                        <td>
+                            <a asp-action="Detalhes" asp-route-id="@item.Id" class="btn btn-sm btn-primary">
+                                Detalhes
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}

@@ -1,0 +1,83 @@
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Painel do Administrador";
+}
+
+<div class="container mt-5">
+    <h1 class="display-4 mb-4 text-center text-info">
+        <i class="bi bi-gear"></i> Painel de Controle
+    </h1>
+    <h4 class="text-center mb-5">
+        Bem-vindo(a), @ViewData["AdminName"]! Gerencie a DreamCupCakes.
+    </h4>
+
+    <hr class="mb-5" />
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+
+        <div class="col">
+            <div class="card shadow h-100 text-center border-success">
+                <div class="card-body">
+                    <i class="bi bi-heart display-3 text-primary"></i>
+                    <h5 class="card-title mt-3">Gestão de Cupcakes</h5>
+                    <p class="card-text text-muted">Cadastrar, editar e remover produtos.</p>
+                    <a asp-controller="Cupcake" asp-action="Index" class="btn btn-success btn-lg mt-2">
+                        Acessar Produtos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card shadow h-100 text-center border-primary">
+                <div class="card-body">
+                    <i class="bi bi-list-check display-3 text-primary"></i>
+                    <h5 class="card-title mt-3">Gerenciamento de Pedidos</h5>
+                    <p class="card-text text-muted">Acompanhar status, valores e entregas.</p>
+                    <a asp-controller="Pedido" asp-action="Index" class="btn btn-primary btn-lg mt-2">
+                        Acessar Pedidos
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card shadow h-100 text-center border-warning">
+                <div class="card-body">
+                    <i class="bi bi-person-fill-gear display-3 text-warning"></i>
+                    <h5 class="card-title mt-3">Gestão de Entregadores</h5>
+                    <p class="card-text text-muted">Adicionar, editar e desativar entregadores.</p>
+                    <a asp-controller="Admin" asp-action="GerenciarEntregadores" class="btn btn-warning btn-lg mt-2">
+                        Gerenciar Entregadores
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col">
+            <div class="card shadow h-100 text-center border-info">
+                <div class="card-body">
+                    <i class="bi bi-bar-chart-fill display-3 text-info"></i>
+                    <h5 class="card-title mt-3">Relatórios de Vendas</h5>
+                    <p class="card-text text-muted">Ver vendas por período (dia, semana, mês).</p>
+                    <a asp-controller="Pedido" asp-action="RelatorioVendas" class="btn btn-info btn-lg mt-2">
+                        Ver Relatórios
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row mt-5">
+        <div class="col text-center">
+            <form asp-controller="Account" asp-action="Logout" method="post">
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-right"></i> Sair do Painel
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">

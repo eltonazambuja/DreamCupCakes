@@ -1,0 +1,71 @@
+﻿@model List<DreamCupCakes.Models.ItemPedido>
+@{
+    ViewData["Title"] = "Checkout";
+    decimal subtotal = Model.Sum(i => i.Quantidade * i.PrecoUnitario);
+    var cliente = ViewBag.Cliente as DreamCupCakes.Models.Usuario;
+}
+
+<div class="container py-5">
+    <h1 class="text-danger mb-4">
+        <i class="bi bi-credit-card"></i> Confirmação e Pagamento
+    </h1>
+    <hr />
+
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card shadow p-4">
+                <h4 class="text-primary mb-3">Detalhes de Entrega</h4>
+
+                @if (cliente != null)
+                {
+                    <p><strong>Nome:</strong> @cliente.Nome</p>
+                    <p><strong>E-mail:</strong> @cliente.Email</p>
+                    <p><strong>Endereço:</strong> @cliente.Endereco</p>
+                    <p><strong>Telefone:</strong> @cliente.Telefone</p>
+
+                    <div class="alert alert-info small mt-3">
+                        A entrega será feita no endereço cadastrado.
+                    </div>
+                }
+            </div>
+
+            <a asp-controller="Carrinho" asp-action="Index" class="btn btn-outline-secondary mt-3">
+                <i class="bi bi-arrow-left"></i> Voltar ao Carrinho
+            </a>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card bg-light shadow border-0 p-4">
+                <h4 class="text-success mb-3">Total e Forma de Pagamento</h4>
+
+                <ul class="list-group list-group-flush mb-4">
+                    <li class="list-group-item d-flex justify-content-between">
+                        Subtotal de Itens:
+                        <span class="fw-bold">R$ @subtotal.ToString("N2")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between text-success fs-4">
+                        Total a Pagar:
+                        <span class="fw-bold">R$ @subtotal.ToString("N2")</span>
+                    </li>
+                </ul>
+                <form asp-controller="Carrinho" asp-action="Confirmar" method="post">
+                    <div class="form-group mb-4">
+                        <label for="formaPagamento" class="form-label fw-bold">Selecione a Forma de Pagamento:</label>
+                        <select name="formaPagamento" id="formaPagamento" class="form-select" required>
+                            <option value="">-- Selecione --</option>
+                            <option value="Cartao Ficticio">Cartão de Crédito (Fictício)</option>
+                            <option value="Dinheiro">Dinheiro (Pagamento na Entrega)</option>
+                            <option value="Pix Ficticio">PIX (Fictício)</option>
+                        </select>
+                    </div>
+
+                    <p class="text-muted small">Ao confirmar, o pedido será registrado e enviado para a cozinha.</p>
+
+                    <button type="submit" class="btn btn-success btn-lg w-100">
+                        <i class="bi bi-check-circle"></i> CONFIRMAR PEDIDO
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
