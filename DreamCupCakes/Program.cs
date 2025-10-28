@@ -6,9 +6,6 @@ using DreamCupCakes.Services;
 var builder = WebApplication.CreateBuilder(args);
 
 // ======================================================================
-// 1) CONNECTION STRING: usa env var se existir; senão, monta caminho seguro
-//    No Azure, HOME existe e aponta para /home (Linux) ou D:\home (Windows).
-// ======================================================================
 string? connFromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
 string? home = Environment.GetEnvironmentVariable("HOME");
 string connString;
@@ -75,9 +72,6 @@ try
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    // Se estiver usando SQLitePCLRaw, a linha abaixo geralmente não é necessária,
-    // mas se ver erro de inicialização nativa, pode habilitar:
-    // SQLitePCL.Batteries_V2.Init();
 
     db.Database.Migrate();
 }
@@ -99,7 +93,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Ordem recomendada: Auth/Authorization, depois Session, depois endpoints
+// Ordem recomendada: Auth/Authorization, depois Session, depois endpoints, visto no youtube
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
