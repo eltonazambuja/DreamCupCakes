@@ -2,9 +2,14 @@ using DreamCupCakes.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using DreamCupCakes.Services;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// ======================================================================
+// 1) Connection string dinâmica (local/Azure/App Service/etc.)
 // ======================================================================
 string? connFromConfig = builder.Configuration.GetConnectionString("DefaultConnection");
 string? home = Environment.GetEnvironmentVariable("HOME");
@@ -29,6 +34,7 @@ else
     connString = !string.IsNullOrWhiteSpace(connFromConfig)
         ? connFromConfig!
         : $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DreamCupCakes.db")}";
+
     var localDir = Path.GetDirectoryName(connString.Replace("Data Source=", "").Split(';')[0])!;
     if (!Directory.Exists(localDir)) Directory.CreateDirectory(localDir);
 }
@@ -64,15 +70,38 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddControllersWithViews();
 
+// ======================================================================
+// 2.1) Cultura padrão pt-BR (usa vírgula como separador decimal)
+// ======================================================================
+var defaultCulture = new CultureInfo("pt-BR");
+defaultCulture.NumberFormat.NumberDecimalSeparator = ",";
+defaultCulture.NumberFormat.CurrencyDecimalSeparator = ",";
+
+// aplica cultura padrão pra todas as threads
+CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
+
+// registra as culturas suportadas no pipeline de localização
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { defaultCulture };
+
+    options.DefaultRequestCulture = new RequestCulture(defaultCulture);
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
+
+// ======================================================================
+
 var app = builder.Build();
 
 // ======================================================================
-/* 3) Migrações automáticas (cria/atualiza o .db no Azure) */
+// 3) Migrações automáticas (cria/atualiza o .db no Azure)
+// ======================================================================
 try
 {
     using var scope = app.Services.CreateScope();
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
     db.Database.Migrate();
 }
 catch (Exception ex)
@@ -88,12 +117,22 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+// ======================================================================
+// 4) RequestLocalization -> garante pt-BR na formatação Razor
+// ======================================================================
+var locOptions = app.Services
+    .GetRequiredService<IOptions<RequestLocalizationOptions>>()
+    .Value;
+app.UseRequestLocalization(locOptions);
+
+// ======================================================================
+
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// Ordem recomendada: Auth/Authorization, depois Session, depois endpoints, visto no youtube
+// Ordem recomendada: Auth/Authorization, depois Session, depois endpoints
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();

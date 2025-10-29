@@ -8,6 +8,9 @@
     {
         subtotal += item.Quantidade * item.PrecoUnitario;
     }
+    bool isEntregador = User.IsInRole("Entregador");
+    string controllerRetorno = isEntregador ? "Pedido" : "Home";
+    string actionRetorno = isEntregador ? "MeusPedidos" : "Vitrine";
 }
 
 <div class="container py-5">
@@ -126,6 +129,10 @@
 
                     <a asp-controller="Home" asp-action="Vitrine" class="btn btn-outline-secondary mt-2 w-100">
                         Continuar Comprando
+                    </a>
+
+                    <a asp-controller="@controllerRetorno" asp-action="@actionRetorno" class="btn btn-outline-secondary mt-2 w-100">
+                        Voltar a loja
                     </a>
                 </div>
             </div>

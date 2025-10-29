@@ -3,6 +3,9 @@
     ViewData["Title"] = "Acompanhamento de Pedidos";
     var dataInicio = ViewData["DataInicio"] as string;
     var dataFim = ViewData["DataFim"] as string;
+    bool isEntregador = User.IsInRole("Entregador");
+    string controllerRetorno = isEntregador ? "Pedido" : "Home";
+    string actionRetorno = isEntregador ? "MeusPedidos" : "Vitrine";
 }
 
 <div class="container py-5">
@@ -36,6 +39,9 @@
                 <div class="col-md-4 d-flex">
                     <button type="submit" class="btn btn-primary w-50 me-2">Filtrar</button>
                     <a asp-action="MeusPedidosCliente" class="btn btn-outline-secondary w-50">Limpar Filtro</a>
+                    <a asp-controller="@controllerRetorno" asp-action="@actionRetorno" class="btn btn-outline-secondary w-50">
+                        Voltar a loja
+                    </a>
                 </div>
             </div>
         </form>
