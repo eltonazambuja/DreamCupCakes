@@ -211,7 +211,7 @@ namespace DreamCupCakes.Controllers
             return RedirectToAction(nameof(Detalhes), new { id });
         }
 
-        // POST: /Pedido/AtualizarStatus/5 (Admin e Entregador)
+        // POST: /Pedido/AtualizarStatus/5 
         [Authorize(Roles = "Administrador,Entregador")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -220,18 +220,22 @@ namespace DreamCupCakes.Controllers
             var pedido = await _context.Pedidos.FindAsync(id);
             if (pedido == null) return NotFound();
 
-            // Validação de Entregador: Se for Entregador, só pode atualizar status do próprio pedido.
-            if (User.IsInRole("Entregador") && pedido.EntregadorId != int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!))
+            if (User.IsInRole("Entregador"))
             {
-                return Forbid();
+                int entregadorId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+                if (novoStatus != "Entregue" && pedido.EntregadorId != entregadorId)
+                {
+                    TempData["ErrorMessage"] = "Você só pode atualizar pedidos que estão atribuídos a você.";
+                    return RedirectToAction(nameof(Detalhes), new { id });
+                }
             }
 
-            // Status Permitidos para a atualização
-            var statusPermitidos = new[] { "Pago", "Em Preparação", "A caminho", "Entregue" };
-            if (!statusPermitidos.Contains(novoStatus))
+
+            // LÓGICA CRÍTICA: Se o status for "Entregue", remove a atribuição
+            if (novoStatus == "Entregue")
             {
-                TempData["ErrorMessage"] = "Status inválido.";
-                return RedirectToAction(nameof(Detalhes), new { id });
+                pedido.EntregadorId = null;
             }
 
             pedido.Status = novoStatus;
@@ -240,14 +244,14 @@ namespace DreamCupCakes.Controllers
             {
                 _context.Update(pedido);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = $"Status do Pedido {id} atualizado para '{novoStatus}'.";
+
+                // ... mensagens de sucesso
             }
             catch (Exception ex)
             {
-                await _logger.LogErrorAsync("PedidoController:AtualizarStatus", $"Erro ao atualizar status do pedido {id} para {novoStatus}.", ex);
-                TempData["ErrorMessage"] = "Erro ao atualizar status. Verifique o log.";
+                // ... log de erro
             }
-
+        
             return RedirectToAction(nameof(Detalhes), new { id });
         }
 

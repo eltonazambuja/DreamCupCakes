@@ -1,0 +1,62 @@
+﻿@using System.Security.Claims
+@{
+    ViewData["Title"] = "Acesso Negado";
+    
+    // VARIÁVEIS PARA IDENTIFICAR O USUÁRIO LOGADO
+    string currentRole = User.FindFirstValue(ClaimTypes.Role) ?? "";
+    bool isAuthenticated = User.Identity.IsAuthenticated;
+
+    // DEFINIÇÃO DOS DESTINOS
+    string controllerRetorno = "Home";
+    string actionRetorno = "Vitrine";
+    string textoBotao = "Voltar à Vitrine";
+
+    if (currentRole == "Administrador")
+    {
+        controllerRetorno = "Admin";
+        actionRetorno = "Dashboard";
+        textoBotao = "Voltar à Dashboard do Administrador";
+    }
+    else if (currentRole == "Entregador")
+    {
+        controllerRetorno = "Pedido";
+        actionRetorno = "MeusPedidos";
+        textoBotao = "Voltar aos Meus Pedidos";
+    }
+}
+
+<div class="container py-5 text-center">
+    <h1 class="display-1 text-danger">
+        <i class="bi bi-x-octagon-fill"></i>
+    </h1>
+    <h2 class="display-4">Acesso Negado</h2>
+    
+    <p class="lead mt-4">
+        Você não tem permissão para visualizar esta página.
+    </p>
+    <div class="mt-5 d-flex justify-content-center gap-3">
+        
+        @if (isAuthenticated)
+        {
+            @* Usuários Logados (Admin, Entregador, Cliente) *@
+            <a asp-controller="@controllerRetorno" asp-action="@actionRetorno" class="btn btn-info btn-lg">
+                <i class="bi bi-arrow-left-circle"></i> @textoBotao
+            </a>
+            
+            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-lg">
+                    <i class="bi bi-box-arrow-right"></i> Sair da Conta
+                </button>
+            </form>
+        }
+        else
+        {
+            @* Usuário Deslogado (Fallback) *@
+            <a asp-controller="Account" asp-action="Login" class="btn btn-primary btn-lg">
+                <i class="bi bi-box-arrow-in-right"></i> Ir para Login
+            </a>
+        }
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">

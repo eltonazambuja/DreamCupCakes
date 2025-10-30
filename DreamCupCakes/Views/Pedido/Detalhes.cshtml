@@ -102,7 +102,7 @@
                 <p><strong>Cliente:</strong> @Model.Cliente.Nome</p>
                 <p><strong>Email:</strong> @Model.Cliente.Email</p>
                 <p><strong>Telefone:</strong> @Model.Cliente.Telefone</p>
-                <p><strong>Endereço:</strong> @Model.Cliente.Endereco</p>
+                <p><strong>Endereço de Entrega:</strong> @Model.EnderecoEntrega</p>
             </div>
 
             <div class="card shadow-sm p-4 mt-4">
@@ -121,8 +121,13 @@
                 </ul>
             </div>
         </div>
+
     </div>
-    <a asp-controller="Pedido" asp-action="MeusPedidosCliente" class="btn btn-outline-success btn-lg">
-        <i class="bi bi-box-seam"></i> Meus Pedidos
-    </a>
+    @if (User.IsInRole("Cliente"))
+    {
+        @* O botão só será renderizado se a role for "Cliente" *@
+        <a asp-controller="Pedido" asp-action="MeusPedidosCliente" class="btn btn-outline-success btn-lg">
+            <i class="bi bi-box-seam"></i> Meus Pedidos
+        </a>
+    }
 </div>

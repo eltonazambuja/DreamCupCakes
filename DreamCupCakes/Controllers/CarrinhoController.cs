@@ -128,62 +128,89 @@ namespace DreamCupCakes.Controllers
             return View(carrinho); // Retorna a View Finalizar.cshtml
         }
 
-        // POST: /Carrinho/Confirmar (Persistir o Pedido no DB)
+        // POST: /Carrinho/Confirmar
         [Authorize(Roles = "Cliente")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Confirmar(string formaPagamento)
+        // Recebe todos os campos do formulário: forma de pagamento, opção escolhida e novo endereço
+        public async Task<IActionResult> Confirmar(string formaPagamento, string opcaoEntrega, string? novoEndereco)
         {
             var carrinho = GetCarrinho();
+            var cliente = await _context.Usuarios.FindAsync(int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!));
 
-            if (!carrinho.Any())
+            // Determina o endereço padrão do cliente (para usar se ele escolher a opção "Cadastrado")
+            string enderecoFinal = cliente?.Endereco ?? "Endereço Cadastrado Não Encontrado";
+
+            // 1. Validação do Formulário (Lado do Servidor)
+            if (string.IsNullOrEmpty(formaPagamento))
             {
-                TempData["ErrorMessage"] = "Seu carrinho está vazio!";
-                return RedirectToAction("Vitrine", "Home");
+                ModelState.AddModelError("formaPagamento", "A forma de pagamento é obrigatória.");
             }
 
-            try
+            if (opcaoEntrega == "Alternativo")
             {
-                var clienteId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-                decimal valorTotal = carrinho.Sum(i => i.Quantidade * i.PrecoUnitario);
-
-                // 1. Cria o Pedido (Cabeçalho)
-                var pedido = new Pedido
+                if (string.IsNullOrWhiteSpace(novoEndereco))
                 {
-                    ClienteId = clienteId,
-                    DataPedido = DateTime.Now,
-                    Status = "Pago",
-                    ValorTotal = valorTotal,
-                    FormaPagamento = formaPagamento,
-                    Itens = new List<ItemPedido>()
-                };
-
-                // 2. Adiciona os Itens do Carrinho ao Pedido
-                foreach (var itemCarrinho in carrinho)
-                {
-                    // Apenas copia os dados essenciais para o DB (sem objetos de navegação)
-                    pedido.Itens.Add(new ItemPedido
-                    {
-                        CupcakeId = itemCarrinho.CupcakeId,
-                        Quantidade = itemCarrinho.Quantidade,
-                        PrecoUnitario = itemCarrinho.PrecoUnitario,
-                    });
+                    ModelState.AddModelError("NovoEndereco", "O endereço alternativo é obrigatório.");
                 }
-
-                _context.Pedidos.Add(pedido);
-                await _context.SaveChangesAsync();
-
-                // 3. Limpa o Carrinho (Session)
-                HttpContext.Session.Remove(CarrinhoSessionKey);
-
-                TempData["SuccessMessage"] = $"Pedido registrado com sucesso! Total: R$ {valorTotal:N2}";
-                return RedirectToAction("Vitrine", "Home");
+                else
+                {
+                    // Se Alternativo foi escolhido e está preenchido, define o endereço final.
+                    enderecoFinal = novoEndereco;
+                }
             }
-            catch (Exception)
+
+            if (ModelState.IsValid)
             {
-                TempData["ErrorMessage"] = "Ocorreu um erro ao finalizar o pedido. Tente novamente.";
-                return RedirectToAction(nameof(Index)); // Volta para o carrinho
+                try
+                {
+                    var clienteId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                    decimal valorTotal = carrinho.Sum(i => i.Quantidade * i.PrecoUnitario);
+
+                    // CRIAÇÃO DO PEDIDO: ATRIBUIÇÃO DO ENDEREÇO CORRETO
+                    var pedido = new Pedido
+                    {
+                        ClienteId = clienteId,
+                        DataPedido = DateTime.Now,
+                        Status = "Pago",
+                        ValorTotal = valorTotal,
+                        FormaPagamento = formaPagamento,
+                        // LINHA CRÍTICA: Salva o endereço final escolhido no novo campo do Pedido
+                        EnderecoEntrega = enderecoFinal,
+                        Itens = new List<ItemPedido>()
+                    };
+
+                    // 2. Adiciona os Itens, Salva e Limpa a Sessão
+                    foreach (var itemCarrinho in carrinho)
+                    {
+                        pedido.Itens.Add(new ItemPedido
+                        {
+                            CupcakeId = itemCarrinho.CupcakeId,
+                            Quantidade = itemCarrinho.Quantidade,
+                            PrecoUnitario = itemCarrinho.PrecoUnitario,
+                        });
+                    }
+
+                    _context.Pedidos.Add(pedido);
+                    await _context.SaveChangesAsync();
+                    HttpContext.Session.Remove(CarrinhoSessionKey);
+
+                    TempData["SuccessMessage"] = $"Pedido registrado com sucesso! Entrega em: {enderecoFinal}";
+                    return RedirectToAction("Vitrine", "Home");
+                }
+                catch (Exception ex)
+                {
+                    TempData["ErrorMessage"] = "Ocorreu um erro ao finalizar o pedido. Tente novamente.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
+
+            // Se a validação falhar, repopula TempData e retorna a View com os erros.
+            TempData["NovoEndereco"] = novoEndereco;
+            TempData["FormaPagamento"] = formaPagamento;
+            TempData["OpcaoEntrega"] = opcaoEntrega;
+
+            return RedirectToAction(nameof(Finalizar));
         }
         // POST: /Carrinho/Remover
         [HttpPost]

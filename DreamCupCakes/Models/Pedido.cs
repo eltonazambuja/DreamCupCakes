@@ -12,6 +12,7 @@ namespace DreamCupCakes.Models
         [Required]
         public int ClienteId { get; set; }
         public virtual Usuario Cliente { get; set; }
+        public string EnderecoEntrega { get; set; } //adicoinado depois, para adicionar a função de escolher endereço de entrega, cadastrado ou novo
 
         public int? EntregadorId { get; set; }
         public virtual Usuario Entregador { get; set; }

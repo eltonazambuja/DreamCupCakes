@@ -3,6 +3,11 @@
     ViewData["Title"] = "Checkout";
     decimal subtotal = Model.Sum(i => i.Quantidade * i.PrecoUnitario);
     var cliente = ViewBag.Cliente as DreamCupCakes.Models.Usuario;
+    
+    // VARIÁVEIS PARA REPOPULAR O FORM EM CASO DE ERRO
+    string enderecoAlternativo = TempData["NovoEndereco"] as string ?? "";
+    string formaPagamentoSelecionada = TempData["FormaPagamento"] as string ?? "";
+    string opcaoEntregaSelecionada = TempData["OpcaoEntrega"] as string ?? "Cadastrado";
 }
 
 <div class="container py-5">
@@ -12,59 +17,98 @@
     <hr />
 
     <div class="row">
+        
+        @* COLUNA 1: DETALHES E ENDEREÇO *@
         <div class="col-lg-6 mb-4">
             <div class="card shadow p-4">
-                <h4 class="text-primary mb-3">Detalhes de Entrega</h4>
+                <h4 class="text-primary mb-3">Opções de Entrega</h4>
+                
+                @* INÍCIO DO FORMULÁRIO POST (SUBMISSÃO COMPLETA PARA VALIDAÇÃO) *@
+                <form asp-controller="Carrinho" asp-action="Confirmar" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                @if (cliente != null)
-                {
-                    <p><strong>Nome:</strong> @cliente.Nome</p>
-                    <p><strong>E-mail:</strong> @cliente.Email</p>
-                    <p><strong>Endereço:</strong> @cliente.Endereco</p>
-                    <p><strong>Telefone:</strong> @cliente.Telefone</p>
-
-                    <div class="alert alert-info small mt-3">
-                        A entrega será feita no endereço cadastrado.
+                    @* --- OPÇÃO 1: ENDEREÇO CADASTRADO --- *@
+                    <div class="form-check mb-2">
+                        <input class="form-check-input" type="radio" name="opcaoEntrega" id="enderecoCadastrado" value="Cadastrado" 
+                                @(opcaoEntregaSelecionada == "Cadastrado" ? "checked" : "") required>
+                        <label class="form-check-label fw-bold" for="enderecoCadastrado">
+                            Entregar no Endereço Cadastrado
+                        </label>
+                        <p class="small text-muted ms-4">@cliente?.Endereco</p>
                     </div>
-                }
-            </div>
 
+                    @* --- OPÇÃO 2: OUTRO ENDEREÇO --- *@
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="radio" name="opcaoEntrega" id="outroEndereco" value="Alternativo" 
+                                @(opcaoEntregaSelecionada == "Alternativo" ? "checked" : "") required>
+                        <label class="form-check-label fw-bold" for="outroEndereco">
+                            Entregar em Outro Endereço (Especificar abaixo)
+                        </label>
+                    </div>
+                    
+                    @* --- CAMPO DE ENDEREÇO ALTERNATIVO *@
+                    <div class="form-group mb-4">
+                        <label for="novoEnderecoInput" class="form-label small">Novo Endereço Completo:</label>
+                        <textarea class="form-control" id="novoEnderecoInput" name="novoEndereco" rows="2" placeholder="Rua, Número, Bairro, Cidade">@enderecoAlternativo</textarea>
+                        
+                        @* Mensagem de erro de validação do Controller (se Endereço Alternativo for obrigatório e estiver vazio) *@
+                        @Html.ValidationMessage("NovoEndereco", new { @class = "text-danger" })
+                    </div>
+                    
+                    @* Detalhes do Cliente Cadastrado (Apenas visualização) *@
+                    <h5 class="mt-4 border-top pt-3">Dados Cadastrais</h5>
+                    <p class="small mb-1"><strong>Nome:</strong> @cliente?.Nome</p>
+                    <p class="small mb-1"><strong>Telefone:</strong> @cliente?.Telefone</p>
+
+                    @* ========================================================================= *@
+                    @* COLUNA DE PAGAMENTO E BOTÃO (MOVIMENTO PARA DENTRO DO FORM) *@
+                    @* ========================================================================= *@
+                    <div class="mt-5 card bg-light shadow border-0 p-4">
+                        <h4 class="text-success mb-3">Forma de Pagamento</h4>
+                        <div class="form-group mb-4">
+                            <label for="formaPagamento" class="form-label fw-bold">Selecione a Forma de Pagamento:</label>
+                            <select name="formaPagamento" id="formaPagamento" class="form-select" required>
+                                <option value="" selected="@(string.IsNullOrEmpty(formaPagamentoSelecionada) ? true : false)">-- Selecione --</option>
+
+                                <option value="Cartao Ficticio" selected="@(formaPagamentoSelecionada == "Cartao Ficticio")">Cartão de Crédito (Fictício)</option>
+
+                                <option value="Dinheiro" selected="@(formaPagamentoSelecionada == "Dinheiro")">Dinheiro (Pagamento na Entrega)</option>
+
+                                <option value="Pix Ficticio" selected="@(formaPagamentoSelecionada == "Pix Ficticio")">PIX (Fictício)</option>
+                            </select>
+                            @Html.ValidationMessage("formaPagamento", new { @class = "text-danger" })
+                        </div>
+                        
+                        <p class="text-muted small">Ao confirmar, o pedido será registrado.</p>
+
+                        <button type="submit" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-check-circle"></i> CONFIRMAR PEDIDO
+                        </button>
+                    </div>
+                    @* ========================================================================= *@
+                </form>
+            </div>
+            
             <a asp-controller="Carrinho" asp-action="Index" class="btn btn-outline-secondary mt-3">
                 <i class="bi bi-arrow-left"></i> Voltar ao Carrinho
             </a>
         </div>
 
+        @* COLUNA 2: RESUMO E TOTAL (APENAS LEITURA) *@
         <div class="col-lg-6">
-            <div class="card bg-light shadow border-0 p-4">
-                <h4 class="text-success mb-3">Total e Forma de Pagamento</h4>
-
+             <div class="card bg-light shadow border-0 p-4 sticky-top" style="top: 20px;">
+                <h4 class="text-success mb-3">Resumo do Pedido</h4>
+                
                 <ul class="list-group list-group-flush mb-4">
                     <li class="list-group-item d-flex justify-content-between">
-                        Subtotal de Itens:
-                        <span class="fw-bold">R$ @subtotal.ToString("N2")</span>
+                        Total de Itens:
+                        <span class="fw-bold">@Model.Sum(i => i.Quantidade)</span>
                     </li>
                     <li class="list-group-item d-flex justify-content-between text-success fs-4">
                         Total a Pagar:
                         <span class="fw-bold">R$ @subtotal.ToString("N2")</span>
                     </li>
                 </ul>
-                <form asp-controller="Carrinho" asp-action="Confirmar" method="post">
-                    <div class="form-group mb-4">
-                        <label for="formaPagamento" class="form-label fw-bold">Selecione a Forma de Pagamento:</label>
-                        <select name="formaPagamento" id="formaPagamento" class="form-select" required>
-                            <option value="">-- Selecione --</option>
-                            <option value="Cartao Ficticio">Cartão de Crédito (Fictício)</option>
-                            <option value="Dinheiro">Dinheiro (Pagamento na Entrega)</option>
-                            <option value="Pix Ficticio">PIX (Fictício)</option>
-                        </select>
-                    </div>
-
-                    <p class="text-muted small">Ao confirmar, o pedido será registrado e enviado para a cozinha.</p>
-
-                    <button type="submit" class="btn btn-success btn-lg w-100">
-                        <i class="bi bi-check-circle"></i> CONFIRMAR PEDIDO
-                    </button>
-                </form>
             </div>
         </div>
     </div>
