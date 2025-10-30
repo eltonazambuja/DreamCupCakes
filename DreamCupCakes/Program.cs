@@ -17,12 +17,12 @@ string connString;
 
 if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")))
 {
-    // Prioriza variável de ambiente do App Service (Portal > Configuration)
+
     connString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")!;
 }
 else if (!string.IsNullOrWhiteSpace(home))
 {
-    // Azure App Service (área gravável)
+
     var dataDir = Path.Combine(home!, "Data");
     Directory.CreateDirectory(dataDir);
     var dbPath = Path.Combine(dataDir, "dreamCupCakes.db");
@@ -30,7 +30,6 @@ else if (!string.IsNullOrWhiteSpace(home))
 }
 else
 {
-    // Dev/local: se não houver conexão no appsettings, cria em pasta do projeto
     connString = !string.IsNullOrWhiteSpace(connFromConfig)
         ? connFromConfig!
         : $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "App_Data", "DreamCupCakes.db")}";
@@ -125,14 +124,12 @@ var locOptions = app.Services
     .Value;
 app.UseRequestLocalization(locOptions);
 
-// ======================================================================
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// Ordem recomendada: Auth/Authorization, depois Session, depois endpoints
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseSession();
